@@ -1,0 +1,8 @@
+# .gitignore
+
+# object files
+*.o
+*.elf
+
+# executables
+*.hex
