@@ -160,12 +160,21 @@ void lcd_count_update(short count)
 	lcd_stringout(count_display);
 }
 
-void lcd_local_distance_update(void)
+void lcd_remote_distance_update(unsigned char hundreds, unsigned char tens, unsigned char ones, unsigned char tenths)
 {
+	char distance_display[9];
+	snprintf(distance_display, 9, "%1d%1d%1d.%01.1d", hundreds, tens, ones, tenths);
 
+	lcd_moveto(1,8);
+	lcd_stringout(distance_display);
 }
 
-void lcd_remote_distance_update(void)
+void lcd_local_distance_update(short distance)
 {
-
+	short integer_part = distance / 10;
+	unsigned char decimal_part = (distance % 10);
+	char distance_display[9];
+	snprintf(distance_display, 9, "%3d.%01.1d", integer_part, decimal_part);
+	lcd_moveto(0, 8);
+	lcd_stringout(distance_display);
 }

@@ -13,6 +13,10 @@
 */
 void serial_txchar(char);
 
+
+volatile unsigned char serial_incoming_buffer_count = 0;
+volatile char serial_incoming_buffer[4] = '\0';
+
 /*
 	serial_init(ubrr_value) - Initializes the serial communications
 	for the given ubrr_value.
@@ -61,13 +65,66 @@ void serial_stringout(char *s)
 	}
 }
 
-/*
-	Runs when a character is received. Adds the characters to an array until
-	all 16 have been received. main() then resets the count and displays the
-	message.
-*/
+void serial_transmit(short result)
+{
+	unsigned char digit;
+	serial_txchar('@');
+
+	if (result >= 1000) {
+		digit = result / 1000;
+		serial_txchar(digit);
+	}
+	if (result >= 100) {
+		digit = (result % 1000) / 100;
+		serial_txchar(digit);
+	}
+	if (result >= 10) {
+		digit = (result % 100) / 10;
+		serial_txchar(digit);
+	}
+	if (result >= 0) {
+		digit = result % 10;
+		serial_txchar(digit);
+	}
+
+	serial_txchar('$');
+}
+
+
 ISR(USART_RX_vect)
 {
 	char ch = UDR0;
 
+	if (ch == '@') {
+		serial_FLAG_incoming_message = 1;
+		serial_incoming_buffer_count = 0;
+		int i;
+		for (i = 0; i < 4; i++) {
+			serial_incoming_buffer[i] = 0;
+		}
+	}
+	else if (ch == '$' && serial_FLAG_incoming_message && serial_incoming_buffer_count > 0) {
+		serial_FLAG_incoming_message = 0;
+		serial_FLAG_incoming_mesage_complete = 1;
+	}
+	else if (ch == '$' && serial_FLAG_incoming_message) {
+		serial_FLAG_incoming_message = 0;
+		serial_incoming_buffer_count = 0;
+		int i;
+		for (i = 0; i < 4; i++) {
+			serial_incoming_buffer[i] = 0;
+		}
+	}
+	else if (serial_FLAG_incoming_message && ch >= '0' && ch <= '9') {
+		serial_incoming_buffer[serial_incoming_buffer_count] = ch;
+		serial_incoming_buffer_count++;
+	}
+	else {
+		serial_FLAG_incoming_message = 0;
+		serial_incoming_buffer_count = 0;
+		int i;
+		for (i = 0; i < 4; i++) {
+			serial_incoming_buffer[i] = 0;
+		}
+	}
 }

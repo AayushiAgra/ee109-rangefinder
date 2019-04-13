@@ -12,6 +12,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
+#include <stdio.h>
 
 #include "rangefinder.h"
 #include "lcd.h"
@@ -40,6 +41,8 @@ int main(void) {
 	// Initialize serial communications & interupts
 	serial_init(SERIAL_MYUBRR);
 	serial_enable_interupts();
+	short remote_result;
+	unsigned char remote_result_hundreds, remote_result_tens, remote_result_ones, remote_result_tenths;
 
 	// Initialize rotary encoder & interupts
 	encoder_init();
@@ -54,6 +57,7 @@ int main(void) {
 	// Initialize rangefinder and echo interupts
 	rangefinder_init();
 	rangefinder_enable_interupts();
+	short local_result;
 
 	// Enables interupts globally
 	sei();
@@ -109,18 +113,56 @@ int main(void) {
 			final_project_FLAG_fire_rangefinder = 0;
 		}
 		if (rangefinder_FLAG_needs_calculation) {
-			short result = rangefinder_calculate_distance_milimeters();
-			//  TODO
-			// lcd_stringout result
-			if (result < final_project_local_distance_count) {
-				// TODO turn on LED shorter OR turn on LED longer
+			led_disable(LED_RED);
+			led_disable(LED_GREEN);
+
+			local_result = rangefinder_calculate_distance_milimeters();
+
+			lcd_local_distance_update(local_result);
+			
+			if (local_result < final_project_local_distance_count) {
+				led_enable(LED_RED);
 			}
-			if (result < final_project_remote_distance_count) {
-				// TODO turn on speaker
+			else {
+				led_enable(LED_GREEN);
 			}
-			// serial output to other arduino
+
+			serial_transmit(local_result);
 			
 			rangefinder_FLAG_needs_calculation = 0;
+		}
+		if (serial_FLAG_incoming_message_complete) {
+			sscanf(serial_incoming_buffer, "%hd", &remote_result);
+
+			if (serial_incoming_buffer_count == 4) {
+				remote_result_hundreds = remote_result / 1000;
+				remote_result_tens = (remote_result % 1000) / 100;
+				remote_result_ones = (remote_result % 100) / 10;
+				remote_result_tenths = remote_result % 10;
+			}
+			else if (serial_incoming_buffer_count == 3) {
+				remote_result_hundreds = 0;
+				remote_result_tens = remote_result / 1000;
+				remote_result_ones = (remote_result % 1000) / 100;
+				remote_result_tenths = (remote_result % 100) / 10;
+			}
+			else if (serial_incoming_buffer_count == 2) {
+				remote_result_hundreds = 0;
+				remote_result_tens = 0;
+				remote_result_ones = remote_result / 1000;
+				remote_result_tenths = (remote_result % 1000) / 100;
+			}
+			else if (serial_incoming_buffer_count == 1) {
+				remote_result_hundreds = 0;
+				remote_result_tens = 0;
+				remote_result_ones = 0;
+				remote_result_tenths = remote_result / 1000;
+			}
+
+			lcd_remote_distance_update(remote_result_hundreds, remote_result_tens, remote_result_ones, remote_result_tenths);
+
+			// TODO turn on speaker
+			serial_FLAG_incoming_message_complete = 0;
 		}
 	}
 }		

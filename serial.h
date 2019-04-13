@@ -9,3 +9,8 @@
 void serial_init(unsigned short);
 void serial_stringout(char *);
 void serial_enable_interupts(void);
+
+extern volatile unsigned char serial_FLAG_incoming_message;
+extern volatile unsigned char serial_FLAG_incoming_mesage_complete;
+extern volatile unsigned char serial_incoming_buffer_count;
+extern volatile char serial_incoming_buffer[5];
