@@ -2,14 +2,36 @@
 	speaker.c - Routines for outputting sound via the speaker.
 */
 
-/*
-    speaker_play_note(freq) - Plays a tone at the frequency specified for one second
-*/
-void speaker_play_note(unsigned short freq)
+void speaker_init(void)
 {
-	unsigned long period;
+	DDRC |= (1 << PC2);
+	TCCR0A |= (1 << WGM01);
+	OCR0A = 142;
 
-	// Period of note in microseconds
-	period = 1000000 / freq;
+	TIMSK0 |= (1 << OCIE0A);
+}
 
+void speaker_enable(void)
+{
+	TCCR0B |= (1 << CS02);
+	speaker_timer_cycles_enabled = 0;
+}
+
+ISR(TIMER0_COMPA_vect)
+{
+
+	if (!(PORTB & (1 << PC2))) {
+		PORTB |= (1 << PC2);
+	}
+	else {
+		PORTB &= ~(1 << PC2);
+	}
+
+	speaker_timer_cycles_enabled++;
+
+	if (speaker_timer_cycles_enabled == 2200) {
+		TCCR0B &= ~(1 << CS02);
+		TCNT0 = 0;
+		PORTB &= ~(1 << PC2);
+	}
 }

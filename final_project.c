@@ -10,7 +10,6 @@
 // Necessary library and header files
 #include "final_project.h"
 
-#include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <stdio.h>
 
@@ -42,13 +41,13 @@ int main(void) {
 	serial_init(SERIAL_MYUBRR);
 	serial_enable_interupts();
 	short remote_result;
-	unsigned char remote_result_hundreds, remote_result_tens, remote_result_ones, remote_result_tenths;
+	unsigned char remote_buffer_count;
 
 	// Initialize rotary encoder & interupts
 	encoder_init();
 	encoder_enable_interupts();
-	short final_project_local_distance_count = eeprom_read_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE);
-	short final_project_remote_distance_count = eeprom_read_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE);
+	short local_distance_count = eeprom_read_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE);
+	short remote_distance_count = eeprom_read_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE);
 
 	// Initialize button input & interupts
 	button_init();
@@ -69,42 +68,44 @@ int main(void) {
 		if (!final_project_current_state) {
 			if (final_project_FLAG_update_state) {
 				if (final_project_next_state) {
-					lcd_state_update(1, final_project_remote_distance_count);
+					lcd_state_update(1, remote_distance_count);
 				}
 				final_project_current_state = final_project_next_state;
 				final_project_FLAG_update_state = 0;
 			}
 			if (final_project_FLAG_update_count) {
-				final_project_local_distance_count += encoder_count;
-				if (final_project_local_distance_count > 400) {
-					final_project_local_distance_count = 0;
+				local_distance_count += encoder_count;
+				if (local_distance_count > 400) {
+					local_distance_count = 0;
 				}
-				if (final_project_local_distance_count < 0) {
-					final_project_local_distance_count = 400;
+				if (local_distance_count < 0) {
+					local_distance_count = 400;
 				}
 				encoder_count = 0;
-				lcd_count_update(final_project_local_distance_count);
+				lcd_count_update(local_distance_count);
+				eeprom_update_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE , local_distance_count);
 				final_project_FLAG_update_count = 0;
 			}
 		}
 		else {
 			if (final_project_FLAG_update_state) {
 				if (!final_project_next_state) {
-					lcd_state_update(0, final_project_local_distance_count);
+					lcd_state_update(0, local_distance_count);
 				}
 				final_project_current_state = final_project_next_state;
 				final_project_FLAG_update_state = 0;
 			}
 			if (final_project_FLAG_update_count) {
-				final_project_remote_distance_count += encoder_count;
-				if (final_project_remote_distance_count > 400) {
-					final_project_remote_distance_count = 0;
+				remote_distance_count += encoder_count;
+				if (remote_distance_count > 400) {
+					remote_distance_count = 0;
 				}
-				if (final_project_remote_distance_count < 0) {
-					final_project_remote_distance_count = 400;
+				if (remote_distance_count < 0) {
+					remote_distance_count = 400;
 				}
 				encoder_count = 0;
-				lcd_count_update(final_project_remote_distance_count);
+				lcd_count_update(remote_distance_count);
+				eeprom_update_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE , remote_distance_count);
 				final_project_FLAG_update_count = 0;
 			}
 		}
@@ -120,7 +121,7 @@ int main(void) {
 
 			lcd_local_distance_update(local_result);
 			
-			if (local_result < final_project_local_distance_count) {
+			if (local_result < local_distance_count) {
 				led_enable(LED_RED);
 			}
 			else {
@@ -133,35 +134,14 @@ int main(void) {
 		}
 		if (serial_FLAG_incoming_message_complete) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
+			remote_buffer_count = serial_incoming_buffer_count;
 
-			if (serial_incoming_buffer_count == 4) {
-				remote_result_hundreds = remote_result / 1000;
-				remote_result_tens = (remote_result % 1000) / 100;
-				remote_result_ones = (remote_result % 100) / 10;
-				remote_result_tenths = remote_result % 10;
-			}
-			else if (serial_incoming_buffer_count == 3) {
-				remote_result_hundreds = 0;
-				remote_result_tens = remote_result / 1000;
-				remote_result_ones = (remote_result % 1000) / 100;
-				remote_result_tenths = (remote_result % 100) / 10;
-			}
-			else if (serial_incoming_buffer_count == 2) {
-				remote_result_hundreds = 0;
-				remote_result_tens = 0;
-				remote_result_ones = remote_result / 1000;
-				remote_result_tenths = (remote_result % 1000) / 100;
-			}
-			else if (serial_incoming_buffer_count == 1) {
-				remote_result_hundreds = 0;
-				remote_result_tens = 0;
-				remote_result_ones = 0;
-				remote_result_tenths = remote_result / 1000;
+			lcd_remote_distance_update(remote_result, remote_buffer_count);
+
+			if (remote_result < remote_distance_count) {
+				speaker_enable();
 			}
 
-			lcd_remote_distance_update(remote_result_hundreds, remote_result_tens, remote_result_ones, remote_result_tenths);
-
-			// TODO turn on speaker
 			serial_FLAG_incoming_message_complete = 0;
 		}
 	}
