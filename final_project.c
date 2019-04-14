@@ -10,6 +10,7 @@
 // Necessary library and header files
 #include "final_project.h"
 
+#include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <stdio.h>
 
@@ -21,7 +22,7 @@
 #include "speaker.h"
 #include "led.h"
 
-volatile unsigned char final_project_current_state = 1; // State 0: Local
+volatile unsigned char final_project_current_state = 0; // State 0: Local
 volatile unsigned char final_project_next_state = 0; // State 1: Remote
 volatile unsigned char final_project_FLAG_update_state = 1; // Flag if state has changed
 
@@ -66,13 +67,6 @@ int main(void) {
 
 	while (1) {             // Loop forever
 		if (!final_project_current_state) {
-			if (final_project_FLAG_update_state) {
-				if (final_project_next_state) {
-					lcd_state_update(1, remote_distance_count);
-				}
-				final_project_current_state = final_project_next_state;
-				final_project_FLAG_update_state = 0;
-			}
 			if (final_project_FLAG_update_count) {
 				local_distance_count += encoder_count;
 				if (local_distance_count > 400) {
@@ -88,13 +82,6 @@ int main(void) {
 			}
 		}
 		else {
-			if (final_project_FLAG_update_state) {
-				if (!final_project_next_state) {
-					lcd_state_update(0, local_distance_count);
-				}
-				final_project_current_state = final_project_next_state;
-				final_project_FLAG_update_state = 0;
-			}
 			if (final_project_FLAG_update_count) {
 				remote_distance_count += encoder_count;
 				if (remote_distance_count > 400) {
@@ -109,19 +96,31 @@ int main(void) {
 				final_project_FLAG_update_count = 0;
 			}
 		}
+		if (final_project_FLAG_update_state) {
+			if (!final_project_next_state) {
+				lcd_state_update(0, local_distance_count);
+			}
+			else {
+				lcd_state_update(1, remote_distance_count);
+			}
+			final_project_current_state = final_project_next_state;
+			final_project_FLAG_update_state = 0;
+		}
+
 		if (final_project_FLAG_fire_rangefinder) {
 			rangefinder_trigger();
 			final_project_FLAG_fire_rangefinder = 0;
 		}
+
 		if (rangefinder_FLAG_needs_calculation) {
 			led_disable(LED_RED);
 			led_disable(LED_GREEN);
 
-			local_result = rangefinder_calculate_distance_milimeters();
+			local_result = rangefinder_calculate_distance_millimeters();
 
 			lcd_local_distance_update(local_result);
 			
-			if (local_result < local_distance_count) {
+			if ((local_result / 10) < local_distance_count) {
 				led_enable(LED_RED);
 			}
 			else {
@@ -132,6 +131,7 @@ int main(void) {
 			
 			rangefinder_FLAG_needs_calculation = 0;
 		}
+
 		if (serial_FLAG_incoming_message_complete) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
 			remote_buffer_count = serial_incoming_buffer_count;

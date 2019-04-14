@@ -2,6 +2,13 @@
 	speaker.c - Routines for outputting sound via the speaker.
 */
 
+#include "speaker.h"
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+volatile int speaker_timer_cycles_enabled = 0;
+
 void speaker_init(void)
 {
 	DDRC |= (1 << PC2);

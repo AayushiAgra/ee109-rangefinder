@@ -13,9 +13,10 @@
 */
 void serial_txchar(char);
 
-
+volatile unsigned char serial_FLAG_incoming_message = 0;
+volatile unsigned char serial_FLAG_incoming_message_complete = 0;
 volatile unsigned char serial_incoming_buffer_count = 0;
-volatile char serial_incoming_buffer[4] = '\0';
+volatile char serial_incoming_buffer[5];
 
 /*
 	serial_init(ubrr_value) - Initializes the serial communications
@@ -30,7 +31,9 @@ void serial_init(unsigned short ubrr_value)
 	// Set up USART0 registers
 	UBRR0 = ubrr_value;			// Set baud rate
 	UCSR0C = (3 << UCSZ00);			// Async., no parity, 1 stop bit, 8 data bits
-	UCSR0B |= (1 << TXEN0 | 1 << RXEN0);	// Enable RX and TX
+	UCSR0B |= ((1 << TXEN0) | (1 << RXEN0));	// Enable RX and TX
+
+	serial_incoming_buffer[4] = '\0';
 }
 
 /*
@@ -50,19 +53,6 @@ void serial_txchar(char ch)
 	// Wait for transmitter data register empty
 	while ((UCSR0A & (1 << UDRE0)) == 0) {}
 	UDR0 = ch;
-}
-
-/*
-	serial_stringout(s) - Transmits a message by repeatedly calling the
-	serial_txchar function above.
-*/
-void serial_stringout(char *s)
-{
-	// Call serial_txchar in loop to send a string
-	int i;
-	for (i = 0; i < 16; i++) {
-		serial_txchar(s[i]);
-	}
 }
 
 void serial_transmit(short result)
@@ -105,7 +95,7 @@ ISR(USART_RX_vect)
 	}
 	else if (ch == '$' && serial_FLAG_incoming_message && serial_incoming_buffer_count > 0) {
 		serial_FLAG_incoming_message = 0;
-		serial_FLAG_incoming_mesage_complete = 1;
+		serial_FLAG_incoming_message_complete = 1;
 	}
 	else if (ch == '$' && serial_FLAG_incoming_message) {
 		serial_FLAG_incoming_message = 0;

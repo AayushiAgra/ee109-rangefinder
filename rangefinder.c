@@ -24,6 +24,9 @@ void rangefinder_init(void)
 void rangefinder_enable_interupts(void)
 {
 	TIMSK1 |= (1 << OCIE1A);
+
+	PCICR |= (1 << PCIE0);
+	PCMSK0 |= (1 << PCINT3);
 }
 
 void rangefinder_trigger(void)

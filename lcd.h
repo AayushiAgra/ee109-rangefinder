@@ -10,3 +10,5 @@ void lcd_writedata(unsigned char);
 void lcd_splash_screen(void);
 void lcd_state_update(unsigned char, short);
 void lcd_count_update(short);
+void lcd_remote_distance_update(short, unsigned char);
+void lcd_local_distance_update(short);
