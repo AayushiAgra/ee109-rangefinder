@@ -14,9 +14,9 @@
 void serial_txchar(char);
 
 volatile unsigned char serial_FLAG_incoming_message = 0;
-volatile unsigned char serial_FLAG_incoming_message_complete = 0;
+volatile unsigned char serial_FLAG_incoming_message_complete = 1;
 volatile unsigned char serial_incoming_buffer_count = 0;
-volatile char serial_incoming_buffer[5];
+volatile char serial_incoming_buffer[5] = {'0','0','0','0','\0'};
 
 /*
 	serial_init(ubrr_value) - Initializes the serial communications
@@ -32,8 +32,6 @@ void serial_init(unsigned short ubrr_value)
 	UBRR0 = ubrr_value;			// Set baud rate
 	UCSR0C = (3 << UCSZ00);			// Async., no parity, 1 stop bit, 8 data bits
 	UCSR0B |= ((1 << TXEN0) | (1 << RXEN0));	// Enable RX and TX
-
-	serial_incoming_buffer[4] = '\0';
 }
 
 /*
@@ -90,7 +88,7 @@ ISR(USART_RX_vect)
 		serial_incoming_buffer_count = 0;
 		int i;
 		for (i = 0; i < 4; i++) {
-			serial_incoming_buffer[i] = 0;
+			serial_incoming_buffer[i] = '0';
 		}
 	}
 	else if (ch == '$' && serial_FLAG_incoming_message && serial_incoming_buffer_count > 0) {
@@ -102,10 +100,10 @@ ISR(USART_RX_vect)
 		serial_incoming_buffer_count = 0;
 		int i;
 		for (i = 0; i < 4; i++) {
-			serial_incoming_buffer[i] = 0;
+			serial_incoming_buffer[i] = '0';
 		}
 	}
-	else if (serial_FLAG_incoming_message && ch >= '0' && ch <= '9') {
+	else if (serial_FLAG_incoming_message) {
 		serial_incoming_buffer[serial_incoming_buffer_count] = ch;
 		serial_incoming_buffer_count++;
 	}

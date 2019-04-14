@@ -59,6 +59,8 @@ int main(void) {
 	rangefinder_enable_interupts();
 	short local_result;
 
+	speaker_init();
+
 	// Enables interupts globally
 	sei();
 
@@ -70,9 +72,9 @@ int main(void) {
 			if (final_project_FLAG_update_count) {
 				local_distance_count += encoder_count;
 				if (local_distance_count > 400) {
-					local_distance_count = 0;
+					local_distance_count = 1;
 				}
-				if (local_distance_count < 0) {
+				if (local_distance_count < 1) {
 					local_distance_count = 400;
 				}
 				encoder_count = 0;
@@ -85,9 +87,9 @@ int main(void) {
 			if (final_project_FLAG_update_count) {
 				remote_distance_count += encoder_count;
 				if (remote_distance_count > 400) {
-					remote_distance_count = 0;
+					remote_distance_count = 1;
 				}
-				if (remote_distance_count < 0) {
+				if (remote_distance_count < 1) {
 					remote_distance_count = 400;
 				}
 				encoder_count = 0;
@@ -136,7 +138,12 @@ int main(void) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
 			remote_buffer_count = serial_incoming_buffer_count;
 
-			lcd_remote_distance_update(remote_result, remote_buffer_count);
+			lcd_moveto(1,8);
+			char test[9];
+			snprintf(test, 9, "%d", remote_result);
+			lcd_stringout(test);
+
+			//lcd_remote_distance_update(remote_result, remote_buffer_count);
 
 			if (remote_result < remote_distance_count) {
 				speaker_enable();
