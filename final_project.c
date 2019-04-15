@@ -138,14 +138,15 @@ int main(void) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
 			remote_buffer_count = serial_incoming_buffer_count;
 
-			lcd_moveto(1,8);
+			/*lcd_moveto(1,8);
 			char test[9];
 			snprintf(test, 9, "%d", remote_result);
-			lcd_stringout(test);
+			lcd_stringout(test);*/
 
-			//lcd_remote_distance_update(remote_result, remote_buffer_count);
+			lcd_remote_distance_update(&remote_result, remote_buffer_count);
 
-			if (remote_result < remote_distance_count) {
+			// TODO fix this shit bc remote result is huge - peep the test code above
+			if ((remote_result / 10) < remote_distance_count) {
 				speaker_enable();
 			}
 

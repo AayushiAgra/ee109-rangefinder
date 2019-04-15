@@ -160,40 +160,44 @@ void lcd_count_update(short count)
 	lcd_stringout(count_display);
 }
 
-void lcd_remote_distance_update(short distance, unsigned char buffer_count)
+void lcd_remote_distance_update(short *distance, unsigned char buffer_count)
 {
 	unsigned char hundreds, tens, ones, tenths;
 
 	if (buffer_count == 4) {
-		hundreds = distance / 1000;
-		tens = (distance % 1000) / 100;
-		ones = (distance % 100) / 10;
-		tenths = distance % 10;
+		hundreds = *distance / 1000;
+		tens = (*distance % 1000) / 100;
+		ones = (*distance % 100) / 10;
+		tenths = *distance % 10;
 	}
 	else if (buffer_count == 3) {
 		hundreds = 0;
-		tens = distance / 1000;
-		ones = (distance % 1000) / 100;
-		tenths = (distance % 100) / 10;
+		tens = *distance / 1000;
+		ones = (*distance % 1000) / 100;
+		tenths = (*distance % 100) / 10;
 	}
 	else if (buffer_count == 2) {
 		hundreds = 0;
 		tens = 0;
-		ones = distance / 1000;
-		tenths = (distance % 1000) / 100;
+		ones = *distance / 1000;
+		tenths = (*distance % 1000) / 100;
 	}
 	else if (buffer_count == 1) {
 		hundreds = 0;
 		tens = 0;
 		ones = 0;
-		tenths = distance / 1000;
+		tenths = *distance / 1000;
 	}
 
+	short integer_part = (hundreds * 100) + (tens * 10) + ones;
 	char distance_display[9];
-	snprintf(distance_display, 9, "%1d%1d%1d.%01.1d", hundreds, tens, ones, tenths);
+	snprintf(distance_display, 9, "%3d.%01.1d", integer_part, tenths);
 
 	lcd_moveto(1,8);
 	lcd_stringout(distance_display);
+
+	*distance = (integer_part * 10) + tenths;
+
 }
 
 void lcd_local_distance_update(short distance)

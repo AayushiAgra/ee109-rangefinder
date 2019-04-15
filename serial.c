@@ -14,7 +14,7 @@
 void serial_txchar(char);
 
 volatile unsigned char serial_FLAG_incoming_message = 0;
-volatile unsigned char serial_FLAG_incoming_message_complete = 1;
+volatile unsigned char serial_FLAG_incoming_message_complete = 0;
 volatile unsigned char serial_incoming_buffer_count = 0;
 volatile char serial_incoming_buffer[5] = {'0','0','0','0','\0'};
 
@@ -25,8 +25,8 @@ volatile char serial_incoming_buffer[5] = {'0','0','0','0','\0'};
 void serial_init(unsigned short ubrr_value)
 {
 	// Sets tri-state 
-	DDRD |= (1 << PC3);
-	PORTD &= ~(1 << PC3);
+	DDRC |= (1 << PC3);
+	PORTC &= ~(1 << PC3);
 
 	// Set up USART0 registers
 	UBRR0 = ubrr_value;			// Set baud rate
@@ -60,19 +60,19 @@ void serial_transmit(short result)
 
 	if (result >= 1000) {
 		digit = result / 1000;
-		serial_txchar(digit);
+		serial_txchar('0' + digit);
 	}
 	if (result >= 100) {
 		digit = (result % 1000) / 100;
-		serial_txchar(digit);
+		serial_txchar('0' + digit);
 	}
 	if (result >= 10) {
 		digit = (result % 100) / 10;
-		serial_txchar(digit);
+		serial_txchar('0' + digit);
 	}
 	if (result >= 0) {
 		digit = result % 10;
-		serial_txchar(digit);
+		serial_txchar('0' + digit);
 	}
 
 	serial_txchar('$');
