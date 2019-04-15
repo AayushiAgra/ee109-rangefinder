@@ -7,7 +7,6 @@
 #define SERIAL_MYUBRR (SERIAL_FOSC/16/SERIAL_BAUD-1) // Value for UBRR0 register
 
 void serial_init(unsigned short);
-void serial_enable_interupts(void);
 void serial_transmit(short);
 
 extern volatile unsigned char serial_FLAG_incoming_message;

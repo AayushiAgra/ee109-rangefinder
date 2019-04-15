@@ -2,6 +2,7 @@
   encoder.c - Routines for using/interpreting rotary encoder
 */
 
+// Include necessary library + header files
 #include "encoder.h"
 
 #include <avr/io.h>
@@ -9,13 +10,21 @@
 
 #include "final_project.h"
 
+// Declare globals used in ISR
 volatile unsigned char encoder_current_state = 0;
 volatile unsigned char encoder_next_state = 0;
 volatile short encoder_count = 0;
 
+/*
+	encoder_init() - Enables the pull-up resistors, interrupts, and determines
+	the initial state for the rotary encoder
+*/
 void encoder_init(void)
 {
 	PORTC |= ((1 << PC5) | (1 << PC4));
+
+	PCICR |= (1 << PCIE1);
+	PCMSK1 |= ((1 << PCINT13) | (1 << PCINT12));
 
 	unsigned char a, b;
 	encoder_determine_a_b(&a, &b);
@@ -31,15 +40,8 @@ void encoder_init(void)
 }
 
 /*
-	encoder_enable_interupts() - Enables PIN change interupts for
-	the encoder.
+	encoder_determine_a_b(&a, &b) - Determine the current grey code for the encoder
 */
-void encoder_enable_interupts(void)
-{
-	PCICR |= (1 << PCIE1);
-	PCMSK1 |= ((1 << PCINT13) | (1 << PCINT12));
-}
-
 void encoder_determine_a_b(unsigned char *a, unsigned char *b)
 {
 	unsigned char read_in = PINC;
@@ -47,6 +49,11 @@ void encoder_determine_a_b(unsigned char *a, unsigned char *b)
 	*b = (read_in & (1 << PC5));
 }
 
+/*
+	Runs when the encoder has a change of state. Determines the new state and
+	increments the count as appropriate. Sets a flag to update the counters in 
+	final_project.c
+*/
 ISR(PCINT1_vect)
 {
 	unsigned char a, b;

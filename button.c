@@ -2,23 +2,26 @@
 	button.c - Routines for usage of buttons as input.
 */
 
+// Include necessary header + library files
 #include "button.h"
 
 #include <avr/interrupt.h>
 
 #include "final_project.h"
 
+/*
+	button_init() - Enables pull-up resistors and interupts for the buttons
+*/
 void button_init(void)
 {
 	PORTD |= ((1 << PD3) | (1 << PD2));
-}
-
-void button_enable_interupts(void)
-{
 	PCICR |= (1 << PCIE2);
 	PCMSK2 |= ((1 << PCINT19) | (1 << PCINT18));
 }
 
+/*
+	button_get_value(pin) - Determines whether a button connected to a pin has been pressed
+*/
 char button_get_value(char pin)
 {
 	if ((PIND & (1 << pin)) != 0) {
@@ -29,6 +32,11 @@ char button_get_value(char pin)
 	}
 }
 
+/*
+	Runs when a button has been pressed. If the trigger button is pressed,
+	the flag to fire the rangefinder is enabled. If the state change button is
+	pressed, the next state is changed and the flag to change state is enabled
+*/
 ISR(PCINT2_vect)
 {
 	if (button_get_value(PD3) == 0) {

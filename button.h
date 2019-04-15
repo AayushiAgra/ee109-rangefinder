@@ -3,5 +3,4 @@
 */
 
 void button_init(void);
-void button_enable_interupts(void);
-char button_get_value(char pin);
+char button_get_value(char);

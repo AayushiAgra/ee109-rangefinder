@@ -140,6 +140,9 @@ void lcd_splash_screen(void)
 	lcd_writecommand(1); // Clear LCD
 }
 
+/*
+	lcd_state_update(state, count) - Prints the appropriate state to the LCD
+*/
 void lcd_state_update(unsigned char state, short count)
 {
 	lcd_moveto(0,0);
@@ -152,6 +155,9 @@ void lcd_state_update(unsigned char state, short count)
 	lcd_count_update(count);
 }
 
+/*
+	lcd_count_update(count) - Prints the current count to the display
+*/
 void lcd_count_update(short count)
 {
 	char count_display[9];
@@ -160,6 +166,10 @@ void lcd_count_update(short count)
 	lcd_stringout(count_display);
 }
 
+/*
+	lcd_remote_distance_update(&distance, buffer_count) - Calculates the distance 
+	received from another arduino and displays it on the LCD. 
+*/
 void lcd_remote_distance_update(short *distance, unsigned char buffer_count)
 {
 	unsigned char hundreds, tens, ones, tenths;
@@ -200,6 +210,10 @@ void lcd_remote_distance_update(short *distance, unsigned char buffer_count)
 
 }
 
+/*
+	lcd_local_distance_update(distance) - Calculates the distance in cm and displays 
+	on the LCD.
+*/
 void lcd_local_distance_update(short distance)
 {
 	short integer_part = distance / 10;

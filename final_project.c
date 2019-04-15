@@ -40,23 +40,19 @@ int main(void) {
 
 	// Initialize serial communications & interupts
 	serial_init(SERIAL_MYUBRR);
-	serial_enable_interupts();
 	short remote_result;
 	unsigned char remote_buffer_count;
 
 	// Initialize rotary encoder & interupts
 	encoder_init();
-	encoder_enable_interupts();
 	short local_distance_count = eeprom_read_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE);
 	short remote_distance_count = eeprom_read_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE);
 
 	// Initialize button input & interupts
 	button_init();
-	button_enable_interupts();
 
 	// Initialize rangefinder and echo interupts
 	rangefinder_init();
-	rangefinder_enable_interupts();
 	short local_result;
 
 	speaker_init();
@@ -138,14 +134,8 @@ int main(void) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
 			remote_buffer_count = serial_incoming_buffer_count;
 
-			/*lcd_moveto(1,8);
-			char test[9];
-			snprintf(test, 9, "%d", remote_result);
-			lcd_stringout(test);*/
-
 			lcd_remote_distance_update(&remote_result, remote_buffer_count);
 
-			// TODO fix this shit bc remote result is huge - peep the test code above
 			if ((remote_result / 10) < remote_distance_count) {
 				speaker_enable();
 			}

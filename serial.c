@@ -20,7 +20,7 @@ volatile char serial_incoming_buffer[5] = {'0','0','0','0','\0'};
 
 /*
 	serial_init(ubrr_value) - Initializes the serial communications
-	for the given ubrr_value.
+	for the given ubrr_value and enables interrupts
 */
 void serial_init(unsigned short ubrr_value)
 {
@@ -32,13 +32,6 @@ void serial_init(unsigned short ubrr_value)
 	UBRR0 = ubrr_value;			// Set baud rate
 	UCSR0C = (3 << UCSZ00);			// Async., no parity, 1 stop bit, 8 data bits
 	UCSR0B |= ((1 << TXEN0) | (1 << RXEN0));	// Enable RX and TX
-}
-
-/*
-	serial_enable_interupts() - Enable interupts for serial comms
-*/
-void serial_enable_interupts(void)
-{
 	UCSR0B |= (1 << RXCIE0); // Enable receiver interrupts
 }
 
@@ -53,6 +46,10 @@ void serial_txchar(char ch)
 	UDR0 = ch;
 }
 
+/*
+	serial_transmit(result) - Transmits the result of the rangefinder in millimeters 
+	according to the convention established in the project handout
+*/
 void serial_transmit(short result)
 {
 	unsigned char digit;
@@ -78,7 +75,11 @@ void serial_transmit(short result)
 	serial_txchar('$');
 }
 
-
+/*
+	Runs when a character is received. Creates a buffer of numbers if the appropriate 
+	symbols have been received according to the convention established in the project 
+	handout. Sets a flag to display the message in main()
+*/
 ISR(USART_RX_vect)
 {
 	char ch = UDR0;

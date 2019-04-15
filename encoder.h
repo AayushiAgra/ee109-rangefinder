@@ -3,7 +3,6 @@
 */
 
 void encoder_init(void);
-void encoder_enable_interupts(void);
 void encoder_determine_a_b(unsigned char *, unsigned char *);
 
 extern volatile unsigned char encoder_current_state;

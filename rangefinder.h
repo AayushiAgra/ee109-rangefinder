@@ -10,7 +10,6 @@
 #define RANGEFINDER_TRIGGER_DELAY 10
 
 void rangefinder_init(void);
-void rangefinder_enable_interupts(void);
 void rangefinder_trigger(void);
 short rangefinder_calculate_distance_millimeters(void);
 
