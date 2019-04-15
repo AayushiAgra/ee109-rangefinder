@@ -2,7 +2,8 @@
 	serial.c - Routines for sending data using serial communications.
 */
 
-#include "serial.h"		// Declarations of serial comm functions
+// Include necessary library + header files
+#include "serial.h"	
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -13,6 +14,7 @@
 */
 void serial_txchar(char);
 
+// Declare globals used in serial comms ISRs
 volatile unsigned char serial_FLAG_incoming_message = 0;
 volatile unsigned char serial_FLAG_incoming_message_complete = 0;
 volatile unsigned char serial_incoming_buffer_count = 0;

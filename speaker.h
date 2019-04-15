@@ -1,5 +1,5 @@
 /*
-	speaker.h - Header file to declare functions and macros used in speaker output
+	speaker.h - Header file to declare functions and globals used in speaker output
 */
 
 void speaker_init(void);

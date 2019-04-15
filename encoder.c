@@ -10,6 +10,9 @@
 
 #include "final_project.h"
 
+// Declared here since only used in this file
+void encoder_determine_a_b(unsigned char *, unsigned char *);
+
 // Declare globals used in ISR
 volatile unsigned char encoder_current_state = 0;
 volatile unsigned char encoder_next_state = 0;

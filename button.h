@@ -1,6 +1,5 @@
 /*
-	button.h - Header file to declare functions and macros used in button usage
+	button.h - Header file to declare functions used in button usage
 */
 
 void button_init(void);
-char button_get_value(char);

@@ -22,13 +22,9 @@
 #include "speaker.h"
 #include "led.h"
 
-volatile unsigned char final_project_current_state = 0; // State 0: Local
-volatile unsigned char final_project_next_state = 0; // State 1: Remote
 volatile unsigned char final_project_FLAG_update_state = 1; // Flag if state has changed
-
 volatile unsigned char final_project_FLAG_fire_rangefinder = 0; // Flag to fire rangefinder
-
-volatile unsigned char final_project_FLAG_update_count = 1;
+volatile unsigned char final_project_FLAG_update_count = 1; // Flag if count needs updating
 
 int main(void) {
 
@@ -38,23 +34,25 @@ int main(void) {
 	// Initialize LED output
 	led_init();
 
-	// Initialize serial communications & interupts
+	// Initialize serial communications & declare variables used
 	serial_init(SERIAL_MYUBRR);
 	short remote_result;
 	unsigned char remote_buffer_count;
 
-	// Initialize rotary encoder & interupts
+	// Initialize rotary encoder & retrieve stored count values
 	encoder_init();
 	short local_distance_count = eeprom_read_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE);
 	short remote_distance_count = eeprom_read_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE);
 
-	// Initialize button input & interupts
+	// Initialize button input & set the inital state
 	button_init();
+	unsigned char current_state = 1;
 
-	// Initialize rangefinder and echo interupts
+	// Initialize rangefinder and declare variables used
 	rangefinder_init();
 	short local_result;
 
+	// Initialize speaker
 	speaker_init();
 
 	// Enables interupts globally
@@ -63,9 +61,14 @@ int main(void) {
 	// Shows the splash screen
 	lcd_splash_screen();
 
-	while (1) {             // Loop forever
-		if (!final_project_current_state) {
-			if (final_project_FLAG_update_count) {
+	while (1) {
+		/*
+			If the update count flag is on, update the current state's count 
+			by the quantity contained in encoder_count, update the LCD, 
+			and update the flash memory 
+		*/
+		if (final_project_FLAG_update_count) {
+			if (!current_state) {
 				local_distance_count += encoder_count;
 				if (local_distance_count > 400) {
 					local_distance_count = 1;
@@ -76,11 +79,8 @@ int main(void) {
 				encoder_count = 0;
 				lcd_count_update(local_distance_count);
 				eeprom_update_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE , local_distance_count);
-				final_project_FLAG_update_count = 0;
 			}
-		}
-		else {
-			if (final_project_FLAG_update_count) {
+			else {
 				remote_distance_count += encoder_count;
 				if (remote_distance_count > 400) {
 					remote_distance_count = 1;
@@ -91,25 +91,34 @@ int main(void) {
 				encoder_count = 0;
 				lcd_count_update(remote_distance_count);
 				eeprom_update_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE , remote_distance_count);
-				final_project_FLAG_update_count = 0;
 			}
+			final_project_FLAG_update_count = 0;
 		}
+		/*
+			If the update state flag is on, change the current state and update the LCD
+		*/
 		if (final_project_FLAG_update_state) {
-			if (!final_project_next_state) {
+			if (current_state) {
 				lcd_state_update(0, local_distance_count);
+				current_state = 0;
 			}
 			else {
 				lcd_state_update(1, remote_distance_count);
+				current_state = 1;
 			}
-			final_project_current_state = final_project_next_state;
 			final_project_FLAG_update_state = 0;
 		}
-
+		/*
+			If the fire rangefinder flag is on, trigger the rangefinder
+		*/
 		if (final_project_FLAG_fire_rangefinder) {
 			rangefinder_trigger();
 			final_project_FLAG_fire_rangefinder = 0;
 		}
-
+		/*
+			If the needs calculation flag is on, calculate the distance in millimeters,
+			update the LCD, enable the appropriate LED, and transmit the result
+		*/
 		if (rangefinder_FLAG_needs_calculation) {
 			led_disable(LED_RED);
 			led_disable(LED_GREEN);
@@ -129,7 +138,10 @@ int main(void) {
 			
 			rangefinder_FLAG_needs_calculation = 0;
 		}
-
+		/*
+			If the incoming message is complete, update the LCD and decide
+			whether to enable the speaker
+		*/
 		if (serial_FLAG_incoming_message_complete) {
 			sscanf(serial_incoming_buffer, "%hd", &remote_result);
 			remote_buffer_count = serial_incoming_buffer_count;

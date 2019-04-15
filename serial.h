@@ -1,5 +1,5 @@
 /*
-	serial.h - Header file to declare functions and macros used in serial comms
+	serial.h - Header file to declare globals, functions, and macros used in serial comms
 */
 
 #define SERIAL_FOSC 16000000           // Clock frequency

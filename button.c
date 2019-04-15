@@ -9,6 +9,9 @@
 
 #include "final_project.h"
 
+// Declared here since only used in this file
+char button_get_value(char);
+
 /*
 	button_init() - Enables pull-up resistors and interupts for the buttons
 */
@@ -35,7 +38,7 @@ char button_get_value(char pin)
 /*
 	Runs when a button has been pressed. If the trigger button is pressed,
 	the flag to fire the rangefinder is enabled. If the state change button is
-	pressed, the next state is changed and the flag to change state is enabled
+	pressed, the flag to change state is enabled
 */
 ISR(PCINT2_vect)
 {
@@ -43,12 +46,6 @@ ISR(PCINT2_vect)
 		final_project_FLAG_fire_rangefinder = 1;
 	}
 	else if (button_get_value(PD2) == 0) {
-		if (final_project_current_state) {
-			final_project_next_state = 0;
-		}
-		else {
-			final_project_next_state = 1;
-		}
 		final_project_FLAG_update_state = 1;
 	}
 }

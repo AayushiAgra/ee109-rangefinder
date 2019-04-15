@@ -1,5 +1,9 @@
 # EE 109 FINAL PROJECT - RANGEFINDER
 
+## AUTHOR
+	Henry Kroeger
+	Wed 2pm Lab
+
 ## ARDUINO I/O CONFIG
 	IN		NAME	USAGE
 	DO		PD0		RX
@@ -32,5 +36,5 @@
 - Project-wide globals are declared in final_project.h
 - Individual module/component globals declared in relevant header files
 - All globals/macros are named: location_detailedname
-   - i.e. final_project_next_state or encoder_count
-- All flags have _FLAG_ following their declared location in their name
+   - i.e. encoder_count
+- Functions are explained in their appropriate files, and not every time that they are called
