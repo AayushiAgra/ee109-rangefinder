@@ -39,10 +39,17 @@ int main(void) {
 	short remote_result;
 	unsigned char remote_buffer_count;
 
-	// Initialize rotary encoder & retrieve stored count values
+	// Initialize rotary encoder & retrieve stored count values. 
+	// Checks if retrieved values are valid
 	encoder_init();
 	short local_distance_count = eeprom_read_word((void *) FINAL_PROJECT_LOCAL_DISTANCE_STORAGE);
 	short remote_distance_count = eeprom_read_word((void *) FINAL_PROJECT_REMOTE_DISTANCE_STORAGE);
+	if (!(local_distance_count >= 1 && local_distance_count <= 400)) {
+		local_distance_count = 1;
+	}
+	if (!(remote_distance_count >= 1 && remote_distance_count <= 400)) {
+		remote_distance_count = 1;
+	}
 
 	// Initialize button input & set the inital state
 	button_init();
@@ -71,10 +78,10 @@ int main(void) {
 			if (!current_state) {
 				local_distance_count += encoder_count;
 				if (local_distance_count > 400) {
-					local_distance_count = 1;
+					local_distance_count = 400;
 				}
 				if (local_distance_count < 1) {
-					local_distance_count = 400;
+					local_distance_count = 1;
 				}
 				encoder_count = 0;
 				lcd_count_update(local_distance_count);
@@ -83,10 +90,10 @@ int main(void) {
 			else {
 				remote_distance_count += encoder_count;
 				if (remote_distance_count > 400) {
-					remote_distance_count = 1;
+					remote_distance_count = 400;
 				}
 				if (remote_distance_count < 1) {
-					remote_distance_count = 400;
+					remote_distance_count = 1;
 				}
 				encoder_count = 0;
 				lcd_count_update(remote_distance_count);
